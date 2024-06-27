@@ -1,0 +1,93 @@
+import React from "react";
+import { Line, Layer } from "react-konva";
+import axios from 'axios';
+
+
+class Track extends React.Component {
+  constructor(props) {
+    super(props);
+    this.layerRef = React.createRef();
+    this.state = {
+      points: [],
+      curMousePos: [],
+      isFinished: false
+    };
+    this.stage = {};
+  }
+
+  getMousePos = stage => {
+    return [this.stage.getPointerPosition().x, this.stage.getPointerPosition().y];
+  };
+
+  handleClick = event => {
+    const mousePos = this.getMousePos(this.stage);
+
+    if (this.isFinished) {
+      return;
+    }
+
+    if (this.stop !== 1) {
+      this.setState({
+        points: [...this.state.points, mousePos]
+      });
+    }
+
+  };
+
+  handleMouseMove = event => {
+    const { getMousePos } = this;
+    const stage = event.target;
+    const mousePos = getMousePos(stage);
+
+    this.setState({
+      curMousePos: mousePos
+    });
+  };
+
+  handleDoubleClick = (event) => {
+
+    this.stop = 1;
+    this.setState({
+      isFinished: true
+    });
+    console.log("end");
+
+    axios.post('https://596cc46c-e8fa-4f0e-a04d-76a657a62a44.mock.pstmn.io/v1/home1', this.state.points);
+
+  };
+
+  componentDidMount() {
+    this.stage = this.layerRef.current.getStage();
+    this.stage.on("click", this.handleClick);
+    this.stage.on("mousemove", this.handleMouseMove);
+    this.stage.on("dblclick", this.handleDoubleClick);
+  }
+
+  render() {
+    const Points = this.state.points
+
+      .concat(this.state.isFinished ? [] : this.state.curMousePos)
+      .reduce((a, b) => a.concat(b), []);
+
+    return (
+        <Layer ref={this.layerRef}>
+          <Line
+            points={Points}
+            stroke="red"
+            strokeWidth={1}
+            //bezier = "true"
+          ></Line>
+        </Layer>
+    );
+  }
+}
+
+export default Track;
+
+
+function Stop() {
+  console.log(this.state.points);
+}
+
+
+
